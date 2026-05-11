@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/sip.js": {
+      "runtime": "nodejs20.x"
+    }
+  }
+}
