@@ -1,7 +1,6 @@
 {
-  "functions": {
-    "api/sip.js": {
-      "runtime": "nodejs20.x"
-    }
-  }
+  "version": 2,
+  "builds": [
+    { "src": "api/sip.js", "use": "@vercel/node" }
+  ]
 }
