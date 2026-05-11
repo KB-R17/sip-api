@@ -6,10 +6,6 @@ module.exports = async function handler(req, res) {
     const displayUser = req.query.user || 'unknown';
     const key = `sip:${user}`;
 
-    console.log('URL:', process.env.UPSTASH_REDIS_REST_URL);
-    console.log('Token exists:', !!process.env.UPSTASH_REDIS_REST_TOKEN);
-    console.log('Key:', key);
-
     const incrRes = await fetch(
       `${process.env.UPSTASH_REDIS_REST_URL}/incr/${key}`,
       {
@@ -20,37 +16,75 @@ module.exports = async function handler(req, res) {
       }
     );
 
-    console.log('Upstash status:', incrRes.status);
-
     if (!incrRes.ok) {
       const errorText = await incrRes.text();
-      console.log('Upstash error:', errorText);
       res.status(500).send(`Upstash error: ${errorText}`);
       return;
     }
 
     const { result: count } = await incrRes.json();
-    console.log('Count:', count);
 
     const milestones = {
-      1:   `🎉 @${displayUser} took their FIRST sip! The journey begins!`,
-      5:   `🥤 @${displayUser} is warming up — 5 sips in!`,
-      10:  `🔥 10 sips for @${displayUser}! Getting dangerous in here!`,
-      25:  `💀 25 sips! Someone check on @${displayUser}...`,
-      50:  `👑 50 SIPS! @${displayUser} is an absolute legend!`,
-      75:  `😵 75 sips?! @${displayUser} are you okay?!`,
-      100: `🚨 100 SIPS! @${displayUser} has ascended. We are not worthy.`,
-      200: `🏆 200 sips!! @${displayUser} is the undisputed Sip Champion!`,
-    };
+      1:   `☕ @${displayUser} just took their FIRST sip in the Vanguard Café! Welcome to the crew! 🍩`,
+      5:   `🍵 5 sips deep! @${displayUser} is getting comfortable at the counter! 🍩`,
+      10:  `☕🔥 10 sips! @${displayUser} is a regular at Donut_Vanguard's café! The synth is strong with this one!`,
+      25:  `🍩💀 25 sips?! @${displayUser} has been riding the synthwave ALL night long!`,
+      50:  `👑☕ 50 SIPS! @${disp
+cat > api/siptop.js << 'EOF'
+module.exports = async function handler(req, res) {
+  try {
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
-    const message = milestones[count]
-      ?? `@${displayUser} sipped! 🥤 Personal total: ${count} sips`;
+    const scanRes = await fetch(
+      `${process.env.UPSTASH_REDIS_REST_URL}/scan/0?match=sip:*&count=100`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+        },
+      }
+    );
+
+    const { result: scanResult } = await scanRes.json();
+    const keys = scanResult[1];
+
+    if (!keys || keys.length === 0) {
+      res.setHeader('Content-Type', 'text/plain');
+      res.send('No sips recorded yet! Type !sip to claim your spot in the Vanguard Café! ☕🍩');
+      return;
+    }
+
+    const pipeline = keys.map(key => ['get', key]);
+    const multiRes = await fetch(
+      `${process.env.UPSTASH_REDIS_REST_URL}/pipeline`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(pipeline),
+      }
+    );
+
+    const multiData = await multiRes.json();
+
+    const leaderboard = keys.map((key, i) => ({
+      user: key.replace('sip:', ''),
+      count: parseInt(multiData[i].result) || 0,
+    }));
+
+    leaderboard.sort((a, b) => b.count - a.count);
+    const top5 = leaderboard.slice(0, 5);
+
+    const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+    const message = '☕🍩 Vanguard Café Leaderboard: ' + top5
+      .map((entry, i) => `${medals[i]} ${entry.user} (${entry.count} sips)`)
+      .join(' | ');
 
     res.setHeader('Content-Type', 'text/plain');
     res.send(message);
 
   } catch (err) {
-    console.error('Caught error:', err.message);
     res.status(500).send(`Error: ${err.message}`);
   }
 };
