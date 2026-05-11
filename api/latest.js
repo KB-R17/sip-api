@@ -12,12 +12,14 @@ module.exports = async function handler(req, res) {
     );
 
     const { result } = await getRes.json();
+
     if (!result) {
       res.status(200).json({});
       return;
     }
 
     res.status(200).json(JSON.parse(result));
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
