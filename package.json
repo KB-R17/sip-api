@@ -4,6 +4,6 @@
   "description": "Per-user sip counter API for BotRix multi-stream bot",
   "private": true,
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   }
 }
