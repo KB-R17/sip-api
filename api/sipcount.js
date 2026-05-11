@@ -19,12 +19,12 @@ module.exports = async function handler(req, res) {
 
     if (!count) {
       res.setHeader('Content-Type', 'text/plain');
-      res.send(`@${displayUser} hasn't sipped yet! Type !sip to get started 🥤`);
+      res.send(`@${displayUser} hasn't sipped yet! Type !sip to join the Vanguard Café! ☕🍩`);
       return;
     }
 
     res.setHeader('Content-Type', 'text/plain');
-    res.send(`@${displayUser} has sipped ${count} time${count == 1 ? '' : 's'} 🥤`);
+    res.send(`☕ @${displayUser} has taken ${count} sip${count == 1 ? '' : 's'} in the Vanguard Café! 🍩`);
 
   } catch (err) {
     res.status(500).send(`Error: ${err.message}`);
