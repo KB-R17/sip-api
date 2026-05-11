@@ -38,6 +38,20 @@ module.exports = async function handler(req, res) {
     const message = milestones[count]
       ?? `☕ @${displayUser} sipped! 🍩 Vanguard sip count: ${count}`;
 
+    // Save latest event for overlay polling
+    const event = JSON.stringify({ user: displayUser, count, message });
+    await fetch(
+      `${process.env.UPSTASH_REDIS_REST_URL}/set/latest_sip_event`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(['set', 'latest_sip_event', event, 'EX', '30']),
+      }
+    );
+
     res.setHeader('Content-Type', 'text/plain');
     res.send(message);
 
