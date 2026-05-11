@@ -1,5 +1,6 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+
   const user = (req.query.user || 'unknown').toLowerCase();
   const displayUser = req.query.user || 'unknown';
   const key = `sip:${user}`;
@@ -37,4 +38,4 @@ export default async function handler(req, res) {
 
   res.setHeader('Content-Type', 'text/plain');
   res.send(message);
-}
+};
