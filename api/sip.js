@@ -38,17 +38,18 @@ module.exports = async function handler(req, res) {
     const message = milestones[count]
       ?? `☕ @${displayUser} sipped! 🍩 Vanguard sip count: ${count}`;
 
-    // Save latest event for overlay — correct Upstash REST format
-    const event = JSON.stringify({ user: displayUser, count, message });
+    // Save latest event using pipeline format — same as siptop, known to work
     await fetch(
-      `${process.env.UPSTASH_REDIS_REST_URL}/set/latest_sip_event/ex/30`,
+      `${process.env.UPSTASH_REDIS_REST_URL}/pipeline`,
       {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(event),
+        body: JSON.stringify([
+          ['SET', 'latest_sip_event', JSON.stringify({ user: displayUser, count, message }), 'EX', 30]
+        ]),
       }
     );
 
