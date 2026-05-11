@@ -1,0 +1,6 @@
+{
+  "name": "sip-tracker-api",
+  "version": "1.0.0",
+  "description": "Per-user sip counter API for BotRix multi-stream bot",
+  "private": true
+}
